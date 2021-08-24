@@ -98,9 +98,8 @@ router.put("/read",async (req, res, next)=>{
             }
         }
       });
-      return res.json({msg:'ok'})
     }
-    return res.sendStatus(204);
+    return res.sendStatus(204).json(msg: "ok");
   } catch (error) {
     next(error);
   }
