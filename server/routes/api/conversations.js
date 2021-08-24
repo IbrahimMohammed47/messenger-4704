@@ -86,7 +86,7 @@ router.put("/read",async (req, res, next)=>{
     const currUserId = req.user.id;
     const thisConv = await Conversation.findConversation(recipientId, senderId, ["id", "user1Id", "user2Id"]);
     if (currUserId !== recipientId && thisConv.id !== conversationId){
-      return res.sendStatus(301);
+      return res.sendStatus(403);
     }
     if(conversationId){
       Message.update({seen: true}, {
