@@ -77,9 +77,7 @@ export const logout = (id) => async (dispatch) => {
 export const fetchConversations = () => async (dispatch) => {
   try {
     const {user:{id:currUserId}} = store.getState();
-    console.log(currUserId)
     let { data } = await axios.get("/api/conversations");
-    // const notSeenCount = conversation?.messages?.filter(m=>(!m.seen) && m.senderId === otherUser.id).length
     data = data.map(conv=>{return {...conv,notSeenCount:conv.messages?.filter(m=>(!m.seen) && m.senderId !== currUserId).length}});
     dispatch(gotConversations(data));
   } catch (error) {
@@ -106,12 +104,14 @@ const readAllMsgs = async (conversation) => {
   const { otherUser, id} = conversation;
   const originalSenderId = otherUser.id
   const reqBody = {conversationId: id, recipientId:currUserId, senderId:originalSenderId};
-  let someMsgsNotSeen = conversation.messages.some(m=>m.senderId===originalSenderId && !m.seen);
-  if (someMsgsNotSeen){
+  
+  const lastMsg = conversation.messages[conversation.messages.length-1];
+  const lastMsgNotSeen = lastMsg.senderId===originalSenderId && !lastMsg.seen
+  if (lastMsgNotSeen){
     // user cause sender msgs to be marked read
     await postSeenConv(reqBody) 
   }      
-  return someMsgsNotSeen          
+  return lastMsgNotSeen          
 }
 
 const postSeenConv = async(reqBody) =>{

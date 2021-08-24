@@ -84,8 +84,9 @@ router.put("/read",async (req, res, next)=>{
     }
     const {conversationId, recipientId, senderId} = req.body;
     const currUserId = req.user.id;
-    const thisConv = await Conversation.findConversation(recipientId, senderId, ["id", "user1Id", "user2Id"]);
-    if (currUserId !== recipientId && thisConv.id !== conversationId){
+    const thisConv = await Conversation.findByPk(conversationId, { attributes: ["user1Id", "user2Id"] });
+    const trueChatters = (thisConv.user1Id === recipientId && thisConv.user2Id === senderId) || (thisConv.user1Id === senderId && thisConv.user2Id === recipientId);
+    if (currUserId !== recipientId || !trueChatters){
       return res.sendStatus(403);
     }
     if(conversationId){
@@ -99,7 +100,7 @@ router.put("/read",async (req, res, next)=>{
         }
       });
     }
-    return res.sendStatus(204).json(msg: "ok");
+    return res.status(204).json({msg: "ok"});
   } catch (error) {
     next(error);
   }

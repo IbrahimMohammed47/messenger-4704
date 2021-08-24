@@ -3,10 +3,20 @@ import { Box } from "@material-ui/core";
 import { SenderBubble, OtherUserBubble } from "../ActiveChat";
 import moment from "moment";
 
+const getLastMsgIdx = (messages, userId) => {
+  for (let i = messages.length-1; i >= 0; i--) {
+    if (messages[i].seen && messages[i].senderId === userId){
+      return i
+    } 
+  }
+  return -1;
+}
+
 const Messages = (props) => {
   const { messages, otherUser, userId } = props;
 
-  const lastSeenMsgIdx = messages.map(m => m.seen && m.senderId === userId).lastIndexOf(true);
+  const lastSeenMsgIdx = getLastMsgIdx(messages,userId)
+  
   return (
     <Box>
       {messages.map((message,idx) => {

@@ -20,7 +20,7 @@ router.post("/", async (req, res, next) => {
     let conversation = await Conversation.findConversation(
       senderId,
       recipientId,
-      ["id", "user1Id", "user2Id"]
+      ["id"]
     );
 
     if (!conversation) {
