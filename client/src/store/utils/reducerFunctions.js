@@ -48,6 +48,29 @@ export const ackConvInStore = (state, {conversationId}) => {
   });
 };
 
+export const incUnseenInStore = (state, {conversationId}) => {
+  return state.map((convo) => {
+    if (convo.id === conversationId) {
+      const convoCopy = { ...convo };
+      convoCopy.notSeenCount+=1
+      return convoCopy;
+    } else {
+      return convo;
+    }
+  });
+};
+export const resetUnseenInStore = (state, {conversationId}) => {
+  return state.map((convo) => {
+    if (convo.id === conversationId) {
+      const convoCopy = { ...convo };
+      convoCopy.notSeenCount=0;
+      return convoCopy;
+    } else {
+      return convo;
+    }
+  });
+};
+
 export const removeOfflineUserFromStore = (state, id) => {
   return state.map((convo) => {
     if (convo.otherUser.id === id) {

@@ -6,7 +6,7 @@ const Conversation = db.define("conversation", {});
 
 // find conversation given two user Ids
 
-Conversation.findConversation = async function (user1Id, user2Id) {
+Conversation.findConversation = async function (user1Id, user2Id, attributes=["id"]) {
   const conversation = await Conversation.findOne({
     where: {
       user1Id: {
@@ -15,7 +15,8 @@ Conversation.findConversation = async function (user1Id, user2Id) {
       user2Id: {
         [Op.or]: [user1Id, user2Id]
       }
-    }
+    },
+    attributes
   });
 
   // return conversation or null if it doesn't exist

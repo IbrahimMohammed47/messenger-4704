@@ -77,24 +77,30 @@ router.get("/", async (req, res, next) => {
   }
 });
 
-router.put("/seen",async (req, res, next)=>{
+router.put("/read",async (req, res, next)=>{
   try {
     if (!req.user) {
       return res.sendStatus(401);
     }
-    const {conversationId} = req.body
+    const {conversationId, recipientId, senderId} = req.body;
+    const currUserId = req.user.id;
+    const thisConv = await Conversation.findConversation(recipientId, senderId, ["id", "user1Id", "user2Id"]);
+    if (currUserId !== recipientId && thisConv.id !== conversationId){
+      return res.sendStatus(301);
+    }
     if(conversationId){
-      Message.update({ seen: true}, {
+      Message.update({seen: true}, {
         where: {
             [Op.and]:{
               conversationId,
               seen:false ,
-              [Op.not]: [{senderId: req.user.id}]          
+              senderId
             }
         }
       });
+      return res.json({msg:'ok'})
     }
-    res.json({msg:'ok'})
+    return res.sendStatus(204);
   } catch (error) {
     next(error);
   }

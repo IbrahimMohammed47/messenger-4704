@@ -4,7 +4,9 @@ import {
   addSearchedUsersToStore,
   removeOfflineUserFromStore,
   addMessageToStore,
-  ackConvInStore
+  ackConvInStore,
+  incUnseenInStore,
+  resetUnseenInStore
 } from "./utils/reducerFunctions";
 
 // ACTIONS
@@ -17,7 +19,8 @@ const REMOVE_OFFLINE_USER = "REMOVE_OFFLINE_USER";
 const SET_SEARCHED_USERS = "SET_SEARCHED_USERS";
 const CLEAR_SEARCHED_USERS = "CLEAR_SEARCHED_USERS";
 const ADD_CONVERSATION = "ADD_CONVERSATION";
-
+const INCREMENT_UNSEEN = "INCREMENT_UNSEEN"
+const RESET_UNSEEN = "RESET_UNSEEN"
 // ACTION CREATORS
 
 export const gotConversations = (conversations) => {
@@ -76,6 +79,20 @@ export const addConversation = (recipientId, newMessage) => {
   };
 };
 
+export const incrementUnseenCount = (conversationId) => {
+  return {
+    type: INCREMENT_UNSEEN,
+    payload: { conversationId },
+  };
+};
+
+export const resetUnseenCount = (conversationId) => {
+  return {
+    type: RESET_UNSEEN,
+    payload: { conversationId },
+  };
+};
+
 // REDUCER
 
 const reducer = (state = [], action) => {
@@ -96,6 +113,10 @@ const reducer = (state = [], action) => {
       return addSearchedUsersToStore(state, action.users);
     case CLEAR_SEARCHED_USERS:
       return state.filter((convo) => convo.id);
+    case INCREMENT_UNSEEN:
+      return incUnseenInStore(state, action.payload);
+    case RESET_UNSEEN:
+      return resetUnseenInStore(state, action.payload);
     case ADD_CONVERSATION:
       return addNewConvoToStore(
         state,

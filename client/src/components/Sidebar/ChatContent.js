@@ -31,7 +31,6 @@ const ChatContent = (props) => {
 
   const { conversation } = props;
   const { latestMessageText, otherUser } = conversation;
-  const notSeenCount = conversation?.messages?.filter(m=>(!m.seen) && m.senderId === otherUser.id).length
   return (
     <Box className={classes.root}>
       <Box>
@@ -42,7 +41,7 @@ const ChatContent = (props) => {
           {latestMessageText}
         </Typography>
       </Box>
-      {(notSeenCount>0) && <Badge className={classes.unseenCount} badgeContent={notSeenCount} color="primary"></Badge>}
+      {(conversation.notSeenCount>0) && <Badge className={classes.unseenCount} badgeContent={conversation.notSeenCount} color="primary"></Badge>}
     </Box>
   );
 };
