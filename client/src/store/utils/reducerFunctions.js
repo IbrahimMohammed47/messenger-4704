@@ -36,6 +36,18 @@ export const addOnlineUserToStore = (state, id) => {
   });
 };
 
+export const ackConvInStore = (state, {conversationId}) => {
+  return state.map((convo) => {
+    if (convo.id === conversationId) {
+      const convoCopy = { ...convo };
+      convoCopy.messages = convo.messages.map(m=>!m.seen?{...m,seen:true}:m)      
+      return convoCopy;
+    } else {
+      return convo;
+    }
+  });
+};
+
 export const removeOfflineUserFromStore = (state, id) => {
   return state.map((convo) => {
     if (convo.otherUser.id === id) {

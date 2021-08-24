@@ -1,11 +1,14 @@
 import axios from "axios";
 import socket from "../../socket";
+import store from "../index";
 import {
   gotConversations,
   addConversation,
   setNewMessage,
   setSearchedUsers,
+  ackConv as ackConvAction
 } from "../conversations";
+import {setActiveChat} from "../activeConversation"
 import { gotUser, setFetchingStatus } from "../user";
 
 axios.interceptors.request.use(async function (config) {
@@ -78,35 +81,81 @@ export const fetchConversations = () => async (dispatch) => {
   }
 };
 
+
 const saveMessage = async (body) => {
   const { data } = await axios.post("/api/messages", body);
   return data;
 };
 
-const sendMessage = (data, body) => {
+const sendMessage = (data, senderName, receiverId) => {
   socket.emit("new-message", {
     message: data.message,
-    recipientId: body.recipientId,
-    sender: data.sender,
+    senderName,
+    receiverId
   });
 };
 
+const readAllMsgs = async (conversation) => {  
+  const { otherUser, id} = conversation;
+  const recipientId = otherUser.id
+  const reqBody = {conversationId: id};
+  let someMsgsNotSeen = conversation.messages.some(m=>m.senderId===recipientId && !m.seen);
+  if (someMsgsNotSeen){
+    await postSeenConv(reqBody)
+  }      
+  return someMsgsNotSeen          
+}
+
+const postSeenConv = async(reqBody) =>{
+  await axios.put(`/api/conversations/seen`, reqBody);
+}
+
+const ackConv = (conversationId) => {
+  if(conversationId){
+    socket.emit("ack-conv", {conversationId});  
+  }
+}
 // message format to send: {recipientId, text, conversationId}
 // conversationId will be set to null if its a brand new conversation
 export const postMessage = (body) => async (dispatch) => {  
   try {
-    const data = await saveMessage(body);
+    const data = await saveMessage(body); 
     if (!body.conversationId) {
       dispatch(addConversation(body.recipientId, data.message));
     } else {
       dispatch(setNewMessage(data.message));
     }
 
-    sendMessage(data, body);
+    sendMessage(data, store.getState().user.username, body.recipientId);
   } catch (error) {
     console.error(error);
   }
 };
+
+export const receiveNewMsg = (msg,senderName,receiverId) => async (dispatch)=>{
+  const {activeConversation, user} = store.getState();
+  const isActiveMeantConv = activeConversation === senderName && user.id === receiverId
+  dispatch(setNewMessage({...msg, seen:isActiveMeantConv}));  
+  if(isActiveMeantConv){
+    ackConv(msg.conversationId);
+    await postSeenConv({conversationId: msg.conversationId});
+  }
+}
+
+export const setActiveConv = (conversation) => async (dispatch) => {
+  try {
+    dispatch(setActiveChat(conversation.otherUser.username));
+    // msgs that curr user haven't seen
+    dispatch(ackConvAction(conversation.id))
+    const someMsgsNotSeen = await readAllMsgs(conversation);
+    if(someMsgsNotSeen){
+      ackConv(conversation.id);
+    }
+  } catch (error) {
+    console.error(error);
+  }
+};
+
 
 export const searchUsers = (searchTerm) => async (dispatch) => {
   try {

@@ -77,4 +77,27 @@ router.get("/", async (req, res, next) => {
   }
 });
 
+router.put("/seen",async (req, res, next)=>{
+  try {
+    if (!req.user) {
+      return res.sendStatus(401);
+    }
+    const {conversationId} = req.body
+    if(conversationId){
+      Message.update({ seen: true}, {
+        where: {
+            [Op.and]:{
+              conversationId,
+              seen:false ,
+              [Op.not]: [{senderId: req.user.id}]          
+            }
+        }
+      });
+    }
+    res.json({msg:'ok'})
+  } catch (error) {
+    next(error);
+  }
+})
+
 module.exports = router;
