@@ -77,4 +77,33 @@ router.get("/", async (req, res, next) => {
   }
 });
 
+router.put("/read",async (req, res, next)=>{
+  try {
+    if (!req.user) {
+      return res.sendStatus(401);
+    }
+    const {conversationId, recipientId, senderId} = req.body;
+    const currUserId = req.user.id;
+    const thisConv = await Conversation.findByPk(conversationId, { attributes: ["user1Id", "user2Id"] });
+    const trueChatters = (thisConv.user1Id === recipientId && thisConv.user2Id === senderId) || (thisConv.user1Id === senderId && thisConv.user2Id === recipientId);
+    if (currUserId !== recipientId || !trueChatters){
+      return res.sendStatus(403);
+    }
+    if(conversationId){
+      Message.update({seen: true}, {
+        where: {
+            [Op.and]:{
+              conversationId,
+              seen:false ,
+              senderId
+            }
+        }
+      });
+    }
+    return res.status(204).json({msg: "ok"});
+  } catch (error) {
+    next(error);
+  }
+})
+
 module.exports = router;
